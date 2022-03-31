@@ -64,9 +64,10 @@ class _CommentsState extends State<Comments> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              RecordVoice(
-                                postId: widget.post['key'],
-                              ),
+                              if (mainBox!.get('userstatus') == "moderator")
+                                RecordVoice(
+                                  postId: widget.post['key'],
+                                ),
                               br(15),
                               TextFormField(
                                 textCapitalization:
