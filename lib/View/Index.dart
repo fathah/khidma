@@ -9,8 +9,10 @@ import 'package:dawa/inc/Const.dart';
 import 'package:fabexdateformatter/fabexdateformatter.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:line_icons/line_icons.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Index extends StatelessWidget {
   @override
@@ -70,6 +72,14 @@ class SinglePost extends StatelessWidget {
   bool isInnerComment;
   SinglePost({Key? key, required this.post, this.isInnerComment = false})
       : super(key: key);
+
+  String getBodyText(text) {
+    if (text.length > 200 && !isInnerComment) {
+      return text.substring(0, 200) + "....";
+    } else {
+      return text;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -132,12 +142,28 @@ class SinglePost extends StatelessWidget {
                           br(10),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 6),
-                            child: Text(
-                              "${post['body']}",
+                            child: Linkify(
+                              text: getBodyText(post['body']),
                               style: TextStyle(
                                   color: Colors.black87, fontSize: 18),
+                              onOpen: (link) async {
+                                if (await canLaunch(link.url)) {
+                                  await launch(link.url);
+                                } else {
+                                  throw 'Could not launch $link';
+                                }
+                              },
                             ),
                           ),
+                          if (post['body'].length > 200 && !isInnerComment)
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 6),
+                              child: Text(
+                                "Read More",
+                                style: TextStyle(color: mainSecColor),
+                              ),
+                            ),
                         ],
                         if (post['fileLink'] != null &&
                             post['fileLink'].length > 6)
@@ -194,87 +220,95 @@ class SinglePost extends StatelessWidget {
                             ),
                           ),
                         br(12),
-                        Text(
-                          FabexFormatter().dateTimeToStringDate(
-                              DateTime.parse("${post['createdAt']}")),
-                          style: TextStyle(color: Colors.black38),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                          child: Text(
+                            FabexFormatter().dateTimeToStringDate(
+                                DateTime.parse("${post['createdAt']}")),
+                            style: TextStyle(color: Colors.black38),
+                          ),
                         ),
                         br(10),
                         if (!isInnerComment) ...[
-                          ValueListenableBuilder(
-                              valueListenable: commentBox!.listenable(),
-                              builder: (context, Box cmntBox, snapshot) {
-                                List comments = cmntBox.values.toList();
-                                List moderatorPosts = comments.where((comment) {
-                                  return comment['postId'] == post['key'] &&
-                                      comment['userstatus'] != null &&
-                                      comment['userstatus'] == 'moderator';
-                                }).toList();
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            child: ValueListenableBuilder(
+                                valueListenable: commentBox!.listenable(),
+                                builder: (context, Box cmntBox, snapshot) {
+                                  List comments = cmntBox.values.toList();
+                                  List moderatorPosts =
+                                      comments.where((comment) {
+                                    return comment['postId'] == post['key'] &&
+                                        comment['userstatus'] != null &&
+                                        comment['userstatus'] == 'moderator';
+                                  }).toList();
 
-                                List voicePosts = comments.where((comment) {
-                                  return comment['postId'] == post['key'] &&
-                                      comment['type'] == 'voice';
-                                }).toList();
+                                  List voicePosts = comments.where((comment) {
+                                    return comment['postId'] == post['key'] &&
+                                        comment['type'] == 'voice';
+                                  }).toList();
 
-                                List currentPostComments =
-                                    comments.where((comment) {
-                                  return comment['postId'] == post['key'];
-                                }).toList();
+                                  List currentPostComments =
+                                      comments.where((comment) {
+                                    return comment['postId'] == post['key'];
+                                  }).toList();
 
-                                return Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: bgPale,
-                                        borderRadius: BorderRadius.circular(30),
-                                      ),
-                                      child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(LineIcons.commentAlt),
-                                            brw(4),
-                                            Text(
-                                                "${currentPostComments.length}")
-                                          ]),
-                                    ),
-                                    if (moderatorPosts.length > 0) ...[
-                                      brw(8),
-                                      CircleAvatar(
-                                          backgroundColor: bgPale,
-                                          radius: 16,
-                                          child: Icon(LineIcons.user)),
-                                    ],
-                                    if (voicePosts.length > 0) ...[
-                                      brw(8),
-                                      CircleAvatar(
-                                          backgroundColor: bgPale,
-                                          radius: 16,
-                                          child: Icon(LineIcons.microphone)),
-                                    ],
-                                    Spacer(),
-                                    if (post['createdBy'] ==
-                                        mainBox!.get('user'))
-                                      Padding(
-                                        padding:
-                                            const EdgeInsets.only(right: 15.0),
-                                        child: InkWell(
-                                          onTap: () {
-                                            deleteDialog(context, title: "Post",
-                                                onDelete: () {
-                                              deletePost(post['key']);
-                                            });
-                                          },
-                                          child: CircleAvatar(
-                                              backgroundColor: bgPale,
-                                              radius: 16,
-                                              child: Icon(LineIcons.trash)),
+                                  return Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 12, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: bgPale,
+                                          borderRadius:
+                                              BorderRadius.circular(30),
                                         ),
+                                        child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(LineIcons.commentAlt),
+                                              brw(4),
+                                              Text(
+                                                  "${currentPostComments.length}")
+                                            ]),
                                       ),
-                                  ],
-                                );
-                              })
+                                      if (moderatorPosts.length > 0) ...[
+                                        brw(8),
+                                        CircleAvatar(
+                                            backgroundColor: bgPale,
+                                            radius: 16,
+                                            child: Icon(LineIcons.user)),
+                                      ],
+                                      if (voicePosts.length > 0) ...[
+                                        brw(8),
+                                        CircleAvatar(
+                                            backgroundColor: bgPale,
+                                            radius: 16,
+                                            child: Icon(LineIcons.microphone)),
+                                      ],
+                                      Spacer(),
+                                      if (post['createdBy'] ==
+                                          mainBox!.get('user'))
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                              right: 15.0),
+                                          child: InkWell(
+                                            onTap: () {
+                                              deleteDialog(context,
+                                                  title: "Post", onDelete: () {
+                                                deletePost(post['key']);
+                                              });
+                                            },
+                                            child: CircleAvatar(
+                                                backgroundColor: bgPale,
+                                                radius: 16,
+                                                child: Icon(LineIcons.trash)),
+                                          ),
+                                        ),
+                                    ],
+                                  );
+                                }),
+                          )
                         ],
                         br(10),
                       ],

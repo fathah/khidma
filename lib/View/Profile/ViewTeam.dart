@@ -16,8 +16,12 @@ class _ViewTeamsState extends State<ViewTeams> {
   @override
   void initState() {
     super.initState();
-    getTeams();
-    getUsers();
+    getTeams().then((value) => {
+          if (value) {setState(() => teams = mainBox!.get('teamList') ?? [])}
+        });
+    getUsers().then((value) => {
+          if (value) {setState(() => users = mainBox!.get('allUsers') ?? [])}
+        });
   }
 
   String updatedTo = "";

@@ -22,24 +22,14 @@ Future addPost(postBody, {String fileLink = ''}) async {
     var decod = json.decode(response.body);
     if (decod['status'] == true) {
       postBox!.put(decod['data']['key'], decod['data']);
+      mainBox!.put('postTemp', null);
+      mainBox!.put('postImageTemp', null);
       Get.back();
     } else {
-      Get.snackbar("Failed", decod['message'],
-          titleText: br(0),
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          borderRadius: 4,
-          margin: EdgeInsets.all(10));
+      snack(text: "Something went wrong");
     }
   } catch (e) {
     print(e);
-    Get.snackbar("Failed", "Please check your connection!",
-        titleText: br(0),
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        borderRadius: 4,
-        margin: EdgeInsets.all(10));
+    snack(text: "Please check your connection");
   }
 }

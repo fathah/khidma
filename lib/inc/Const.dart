@@ -18,7 +18,7 @@ const MaterialColor primaryColor = MaterialColor(
     900: Color(0xFF000000),
   },
 );
-const int _primaryColorVal = 0xff143230;
+const int _primaryColorVal = 0xff485A54;
 
 const bgPale = Color(0xffEEE8E4);
 const mainSecColor = Color(0xFF8B6957);

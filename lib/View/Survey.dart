@@ -8,7 +8,9 @@ import 'package:dawa/inc/Const.dart';
 import 'package:fabexdateformatter/fabexdateformatter.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Ideas extends StatelessWidget {
   @override
@@ -129,9 +131,16 @@ class SinglePost extends StatelessWidget {
                                 color: Colors.black87,
                                 fontWeight: FontWeight.bold),
                           ),
-                          Text(
-                            "${survey['body']}",
+                          Linkify(
+                            text: "${survey['body']}",
                             style: TextStyle(color: Colors.black87),
+                            onOpen: (link) async {
+                              if (await canLaunch(link.url)) {
+                                await launch(link.url);
+                              } else {
+                                throw 'Could not launch $link';
+                              }
+                            },
                           ),
                           br(12),
                           Row(

@@ -10,7 +10,8 @@ Future getTeams() async {
     if (response.statusCode == 200) {
       var decod = json.decode(response.body);
       if (decod['items'].length > 0) {
-        mainBox!.put("teamList", decod['items']);
+        await mainBox!.put("teamList", decod['items']);
+        return true;
       }
     }
   } catch (e) {

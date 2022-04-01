@@ -22,14 +22,7 @@ class _UpdateTeamState extends State<UpdateTeam> {
       DropdownEditingController<String>();
   List<String> teams = [];
 
-  @override
-  void initState() {
-    super.initState();
-    controller!.addListener(() {});
-
-    if (mainBox!.get('team') != null) {
-      controller!.value = mainBox!.get('team');
-    }
+  setTeams() {
     if (mainBox!.get('teamList') != null) {
       List<String> tempList = [];
       mainBox!.get('teamList').forEach((team) {
@@ -39,8 +32,21 @@ class _UpdateTeamState extends State<UpdateTeam> {
         teams = tempList;
       });
     }
+  }
 
-    getTeams();
+  @override
+  void initState() {
+    super.initState();
+    controller!.addListener(() {});
+
+    if (mainBox!.get('team') != null) {
+      controller!.value = mainBox!.get('team');
+    }
+    setTeams();
+
+    getTeams().then((value) => {
+          if (value) {setTeams()}
+        });
   }
 
   String updatedTo = "";

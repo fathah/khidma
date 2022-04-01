@@ -20,23 +20,33 @@ class AddPost extends StatefulWidget {
 }
 
 class _AddPostState extends State<AddPost> {
-  String body = "";
+  String body = mainBox!.get('postTemp') ?? "";
   bool isLoading = false;
-
   File? _image;
   final picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    if (mainBox!.get('postImageTemp') != null) {
+      setState(() {
+        _image = File(mainBox!.get('postImageTemp'));
+      });
+    }
+  }
 
   Future<void> getImage() async {
     final pickedFile = await picker.pickImage(
         source: ImageSource.gallery, maxWidth: 1000, imageQuality: 70);
 
-    setState(() {
-      if (pickedFile != null) {
+    if (pickedFile != null) {
+      mainBox!.put('postImageTemp', pickedFile.path);
+      setState(() {
         _image = File(pickedFile.path);
-      } else {
-        print('No image selected.');
-      }
-    });
+      });
+    } else {
+      print('No image selected.');
+    }
   }
 
 // UPLOAD IMAGE
@@ -96,10 +106,15 @@ class _AddPostState extends State<AddPost> {
                   fontSize: 23, fontFamily: raleway, color: Colors.black38),
             ),
             br(20),
-            TextField(
+            TextFormField(
+              initialValue: body,
               textCapitalization: TextCapitalization.sentences,
               maxLines: 4,
-              onChanged: (val) => setState(() => body = val),
+              onChanged: (val) {
+                setState(() => body = val);
+
+                mainBox!.put('postTemp', val);
+              },
               autofocus: true,
               decoration: InputDecoration(
                   hintText: "Type Here...",
@@ -115,30 +130,45 @@ class _AddPostState extends State<AddPost> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                CircleAvatar(
-                    radius: 25,
-                    backgroundColor: bgPale,
-                    child: _image != null
-                        ? InkWell(
-                            onTap: () {
-                              getImage();
-                            },
-                            child: Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                  image: DecorationImage(
-                                      image: FileImage(_image!),
-                                      fit: BoxFit.cover),
-                                  borderRadius: BorderRadius.circular(50)),
-                            ),
-                          )
-                        : IconButton(
-                            tooltip: "Add Image",
-                            onPressed: () {
-                              getImage();
-                            },
-                            icon: Icon(LineIcons.image))),
+                Row(
+                  children: [
+                    CircleAvatar(
+                        radius: 25,
+                        backgroundColor: bgPale,
+                        child: _image != null
+                            ? InkWell(
+                                onTap: () {
+                                  getImage();
+                                },
+                                child: Container(
+                                  width: 50,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                      image: DecorationImage(
+                                          image: FileImage(_image!),
+                                          fit: BoxFit.cover),
+                                      borderRadius: BorderRadius.circular(50)),
+                                ),
+                              )
+                            : IconButton(
+                                tooltip: "Add Image",
+                                onPressed: () {
+                                  getImage();
+                                },
+                                icon: Icon(LineIcons.image))),
+                    brw(5),
+                    if (_image != null)
+                      TextButton(
+                          onPressed: () {
+                            mainBox!.put('postImageTemp', null);
+                            setState(() {
+                              _image = null;
+                            });
+                          },
+                          child: Text('Remove',
+                              style: TextStyle(color: Colors.red[800])))
+                  ],
+                ),
                 ElevatedButton(
                   onPressed: body.length > 3 || _image != null
                       ? () async {

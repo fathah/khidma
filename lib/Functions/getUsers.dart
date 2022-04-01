@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:dawa/inc/Const.dart';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 Future getUsers() async {
@@ -16,17 +15,14 @@ Future getUsers() async {
         decod['items'].forEach((item) {
           tempUsers.add(item);
         });
-        mainBox!.put('allUsers', tempUsers);
+        await mainBox!.put('allUsers', tempUsers);
+        return true;
       }
     }
   } catch (e) {
     print("$e");
-    Get.snackbar("Failed", "Please check your connection!",
-        titleText: br(0),
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        borderRadius: 4,
-        margin: EdgeInsets.all(10));
+    snack(
+      text: "Please check your connection!",
+    );
   }
 }
